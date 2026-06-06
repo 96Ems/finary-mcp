@@ -1,16 +1,14 @@
 {
-  "name": "finary-mcp",
+  "name": "finary-cli",
   "version": "1.0.0",
-  "description": "Finary MCP server",
+  "description": "Finary portfolio data fetcher CLI",
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/index.js"
+    "fetch": "node dist/cli.js"
   },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.0.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "typescript": "^5.0.0",
     "@types/node": "^20.0.0"

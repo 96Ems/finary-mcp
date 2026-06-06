@@ -1,19 +1,30 @@
-# Finary MCP Server (Unofficial)
+# Finary CLI
 
-This is a community-maintained Model Context Protocol (MCP) server for Finary. It uses Finary's unofficial API to provide read-only access to your wealth data.
+A simple CLI tool to fetch your Finary portfolio and net worth data using the unofficial API.
 
-## Features
-- **Net Worth**: Fetch total net worth and asset class breakdown.
-- **Portfolio**: List all holdings and detailed balances.
-
-## Setup
-This server is pre-configured with the credentials provided for testing.
+## Installation
 
 ```bash
 npm install
 npm run build
-npm start
 ```
 
-## Disclaimer
-This project is not affiliated with, maintained, or endorsed by Finary. It uses private API endpoints discovered via community research. Use at your own risk.
+## Usage
+
+You can provide credentials via environment variables:
+
+```bash
+export FINARY_EMAIL="your@email.com"
+export FINARY_PASSWORD="yourpassword"
+npm run fetch
+```
+
+Or pass them as arguments:
+
+```bash
+npm run fetch -- your@email.com yourpassword
+```
+
+## API
+
+The tool exports a `fetchFinaryData(email, password)` function for programmatic use.

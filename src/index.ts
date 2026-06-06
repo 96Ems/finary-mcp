@@ -1,109 +1,32 @@
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-} from "@modelcontextprotocol/sdk/types.js";
-
-/**
- * Finary MCP Server (Unofficial)
- * This server provides read-only access to Finary portfolio data.
- */
-
-const FINARY_EMAIL = process.env.FINARY_EMAIL;
-const FINARY_PASSWORD = process.env.FINARY_PASSWORD;
-let accessToken: string | null = null;
-
-async function authenticate() {
-  if (!FINARY_EMAIL || !FINARY_PASSWORD) {
-    throw new Error("Missing FINARY_EMAIL or FINARY_PASSWORD environment variables");
-  }
-
-  const response = await fetch("https://api.finary.com/auth/login", {
+export async function fetchFinaryData(email: string, password: string) {
+  // 1. Authenticate
+  const authResponse = await fetch("https://api.finary.com/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: FINARY_EMAIL, password: FINARY_PASSWORD }),
+    body: JSON.stringify({ email, password }),
   });
 
-  const data = (await response.json()) as any;
-  if (!response.ok) {
-    throw new Error(`Authentication failed: ${JSON.stringify(data)}`);
+  const authData = (await authResponse.json()) as any;
+  if (!authResponse.ok) {
+    throw new Error(`Authentication failed: ${JSON.stringify(authData)}`);
   }
-  accessToken = data.result.token;
-  return accessToken;
-}
+  const token = authData.result.token;
 
-async function getHeaders() {
-  if (!accessToken) {
-    await authenticate();
-  }
-  return {
-    Authorization: `Bearer ${accessToken}`,
+  const headers = {
+    Authorization: `Bearer ${token}`,
     "Content-Type": "application/json",
   };
-}
 
-const server = new Server(
-  {
-    name: "finary-mcp",
-    version: "1.0.0",
-  },
-  {
-    capabilities: {
-      tools: {},
-    },
-  }
-);
+  // 2. Fetch Net Worth
+  const nwResponse = await fetch("https://api.finary.com/users/me/dashboard/net_worth", { headers });
+  const netWorth = await nwResponse.json();
 
-/**
- * List available tools.
- */
-server.setRequestHandler(ListToolsRequestSchema, async () => {
+  // 3. Fetch Portfolio
+  const pResponse = await fetch("https://api.finary.com/users/me/portfolio", { headers });
+  const portfolio = await pResponse.json();
+
   return {
-    tools: [
-      {
-        name: "get_net_worth",
-        description: "Get current total net worth and asset breakdown",
-        inputSchema: { type: "object", properties: {} },
-      },
-      {
-        name: "get_portfolio",
-        description: "List all portfolio holdings and balances",
-        inputSchema: { type: "object", properties: {} },
-      },
-    ],
+    netWorth,
+    portfolio,
   };
-});
-
-/**
- * Handle tool execution.
- */
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  const headers = await getHeaders();
-
-  switch (request.params.name) {
-    case "get_net_worth": {
-      const response = await fetch("https://api.finary.com/users/me/dashboard/net_worth", { headers });
-      const data = await response.json();
-      return {
-        content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
-      };
-    }
-    case "get_portfolio": {
-      const response = await fetch("https://api.finary.com/users/me/portfolio", { headers });
-      const data = await response.json();
-      return {
-        content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
-      };
-    }
-    default:
-      throw new Error("Tool not found");
-  }
-});
-
-async function main() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
 }
-
-main().catch(console.error);
