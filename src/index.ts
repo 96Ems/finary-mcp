@@ -10,11 +10,15 @@ import {
  * This server provides read-only access to Finary portfolio data.
  */
 
-const FINARY_EMAIL = "emericclt@hotmail.fr";
-const FINARY_PASSWORD = "M3gaCh0uette!";
+const FINARY_EMAIL = process.env.FINARY_EMAIL;
+const FINARY_PASSWORD = process.env.FINARY_PASSWORD;
 let accessToken: string | null = null;
 
 async function authenticate() {
+  if (!FINARY_EMAIL || !FINARY_PASSWORD) {
+    throw new Error("Missing FINARY_EMAIL or FINARY_PASSWORD environment variables");
+  }
+
   const response = await fetch("https://api.finary.com/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
