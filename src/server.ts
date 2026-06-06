@@ -4,6 +4,14 @@ import { fetchFinaryData } from './index.js';
 const app = express();
 const port = process.env.PORT || 3000;
 
+app.get('/', (req, res) => {
+  res.json({ "status": "ok" });
+});
+
+app.get('/mcp', (req, res) => {
+  res.json({ "mcp": true });
+});
+
 app.get('/balance', async (req, res) => {
   const email = process.env.FINARY_EMAIL;
   const password = process.env.FINARY_PASSWORD;
